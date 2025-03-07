@@ -4,3 +4,4 @@ python-docx
 pandas
 PyPDF2
 python-pptx
+openpyxl
