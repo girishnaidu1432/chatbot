@@ -94,7 +94,10 @@ if st.session_state.uploaded_file:
 
 if user_input and user_input.strip():
     combined_prompt = user_input
-    if st.session_state.messages:  # Ensure chat history is included
+    # Include extracted text from uploaded file
+    if st.session_state.extracted_text:
+        combined_prompt = f"Context from uploaded file:\n{st.session_state.extracted_text}\n\nUser Query:\n{user_input}"
+    if st.session_state.messages:  
         history = "\n\n".join([msg["content"] for msg in st.session_state.messages if msg["role"] == "assistant"])
         combined_prompt = f"Previous responses:\n{history}\n\nNow, based on this history, answer the following:\n{user_input}"
     
