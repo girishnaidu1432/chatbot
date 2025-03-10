@@ -8,6 +8,7 @@ from io import BytesIO
 from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+import re
 
 st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
 
@@ -30,7 +31,7 @@ if "extracted_text" not in st.session_state:
 if "new_upload" not in st.session_state:
     st.session_state.new_upload = False
 
-# Function to extract text from uploaded files (store in session state but don't display)
+# Function to extract text from uploaded files (store in session but don't display)
 def extract_text(file):
     text = ""
     if file.type == "application/pdf":
@@ -62,7 +63,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         if "file" in message and message["file"]:
             st.markdown(f"📄 **{message['file']}**")
-        st.markdown(message["content"].replace("<br>", "\n"))  # Fix unexpected <br>
+        st.markdown(message["content"])
 
 # Chat input section with "+" button for file upload
 col1, col2 = st.columns([5, 1])
@@ -78,7 +79,7 @@ if st.session_state.new_upload:
     
     if uploaded_file:
         st.session_state.uploaded_file = uploaded_file.name
-        st.session_state.extracted_text = extract_text(uploaded_file)  # Store extracted text for response use
+        st.session_state.extracted_text = extract_text(uploaded_file)  # Store extracted text but don't display it
         st.session_state.new_upload = False  # Reset after successful upload
 
 # Display uploaded file info and Clear File button
@@ -94,7 +95,7 @@ if st.session_state.uploaded_file:
 if user_input and user_input.strip():
     combined_prompt = user_input
     if st.session_state.uploaded_file:  # Ensure document context is used
-        combined_prompt = f"Here is the relevant document context:\n{st.session_state.extracted_text}\n\nNow, based on this document, answer the following:\n{user_input}"
+        combined_prompt = f"Based on the uploaded document, answer the following:\n{user_input}\n\nDocument Content:\n{st.session_state.extracted_text}"
     
     # Append user message to history
     st.session_state.messages.append({"role": "user", "content": user_input, "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None})
@@ -107,7 +108,7 @@ if user_input and user_input.strip():
         max_tokens=2000
     )
     
-    ai_response = response["choices"][0]["message"]["content"].replace("<br>", "\n")  # Remove unwanted <br>
+    ai_response = re.sub(r'<br\s*/?>', '\n', response["choices"][0]["message"]["content"])  # Remove unwanted <br>
     
     # Append AI response to history
     st.session_state.messages.append({"role": "assistant", "content": ai_response})
