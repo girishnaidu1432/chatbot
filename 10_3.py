@@ -10,7 +10,8 @@ from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 import re
 
-st.image("https://www.innominds.com/hubfs/Innominds-Logo.png", width=200)
+
+st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
 
 # OpenAI API Configuration
 openai.api_key = "14560021aaf84772835d76246b53397a"
