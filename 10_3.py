@@ -20,7 +20,7 @@ openai.api_type = 'azure'
 openai.api_version = '2024-02-15-preview'
 deployment_name = 'gpt'
 
-st.title("RESPONSES🤖")
+st.title("How Can I Assist You?🤖")
 
 # Initialize session state
 if "messages" not in st.session_state:
