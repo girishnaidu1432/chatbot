@@ -9,6 +9,18 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
+
+with st.sidebar:
+    st.image("image.png", width=150)
+
+with st.sidebar:
+    st.markdown(
+        f'<a href="https://fanalysis-uhevotzeiesw3nczetzsmy.streamlit.app/" target="_blank">'
+        f'<img src="image.png" width="150"></a>',
+        unsafe_allow_html=True
+    )
+
+
 st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
 
 # OpenAI API Configuration
