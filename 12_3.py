@@ -9,7 +9,7 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
-# Sidebar branding
+# Sidebar with logo and link
 with st.sidebar:
     st.image("image.png", width=150)
     st.markdown(
@@ -28,7 +28,7 @@ openai.api_type = 'azure'
 openai.api_version = '2024-02-15-preview'
 deployment_name = 'gpt'
 
-# Session state initialization
+# Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "uploaded_file" not in st.session_state:
@@ -65,11 +65,12 @@ def extract_text(file):
         text += df.to_string()
     return text.strip()
 
-# Display chat history
+# Display chat messages in a conversational format
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         if "file" in message and message["file"]:
-            st.markdown(f"📄 **{message['file']}**")
+            with st.expander(f"📄 Uploaded: {message['file']}"):
+                st.markdown("_File content hidden from chat but used in response._")
         st.markdown(message["content"])
 
 # Chat input section with "+" button for file upload
@@ -80,7 +81,7 @@ with col2:
     if st.button("➕"):  # Clicking this opens the file uploader
         st.session_state.new_upload = True
 
-# File uploader
+# Persistent file uploader
 if st.session_state.new_upload:
     uploaded_file = st.file_uploader("Upload File", type=["pdf", "docx", "pptx", "csv", "xlsx"], key="file_uploader")
     
@@ -89,42 +90,33 @@ if st.session_state.new_upload:
         st.session_state.extracted_text = extract_text(uploaded_file)
         st.session_state.new_upload = False  # Reset after successful upload
 
-# Display uploaded file info and collapsible extracted text
+# Display uploaded file info with expander
 if st.session_state.uploaded_file:
-    col1, col2 = st.columns([5, 1])
-    with col1:
-        st.markdown(f"📂 Uploaded: **{st.session_state.uploaded_file}**")
-    with col2:
-        if st.button("❌ Clear File"):
-            st.session_state.uploaded_file = None
-            st.session_state.extracted_text = ""
-
-    # Allow user to expand/collapse extracted text
-    with st.expander("📄 View Extracted Text"):
-        st.text_area("Extracted Text", st.session_state.extracted_text, height=200)
+    with st.expander("📂 Uploaded File"):
+        st.markdown(f"**{st.session_state.uploaded_file}**")
+        st.text_area("Extracted Text (Hidden in Chat)", st.session_state.extracted_text, height=150)
 
 if user_input and user_input.strip():
-    # Combine message history and document context
-    conversation_history = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
-    
-    if st.session_state.uploaded_file and st.session_state.extracted_text:
-        document_context = f"Here is the relevant document information:\n\n{st.session_state.extracted_text}\n\n"
-    else:
-        document_context = ""
-    
-    conversation_history.append({"role": "user", "content": document_context + user_input})
+    # Prepare full conversation history for context
+    conversation_history = "\n".join(
+        [f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages]
+    )
+
+    # Combine extracted text and history in the prompt
+    combined_prompt = conversation_history + f"\nUser: {user_input}"
+    if st.session_state.uploaded_file:  # Ensure document context is used
+        combined_prompt = f"Document Context:\n{st.session_state.extracted_text}\n\nChat History:\n{conversation_history}\n\nUser: {user_input}"
     
     # Append user message to history
     st.session_state.messages.append({
-        "role": "user",
-        "content": user_input,
+        "role": "user", "content": user_input, 
         "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None
     })
     
     # Generate response using OpenAI API
     response = openai.ChatCompletion.create(
         engine=deployment_name,
-        messages=conversation_history,
+        messages=[{"role": "system", "content": combined_prompt}],
         temperature=0.7,
         max_tokens=2000
     )
@@ -147,7 +139,7 @@ def create_docx():
         run.bold = True
         run.font.size = Pt(14)
         if "file" in msg and msg["file"]:
-            doc.add_paragraph(f"📄 {msg['file']}")
+            doc.add_paragraph(f"📄 {msg['file']} (Content Hidden)")
         p.add_run(msg["content"]).font.size = Pt(12)
         p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
         doc.add_paragraph("\n")
