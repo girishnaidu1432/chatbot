@@ -9,10 +9,9 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
+# Sidebar branding
 with st.sidebar:
     st.image("image.png", width=150)
-
-with st.sidebar:
     st.markdown(
         f'<a href="https://fanalysis-uhevotzeiesw3nczetzsmy.streamlit.app/" target="_blank">'
         f'<img src="image.png" width="150"></a>',
@@ -20,6 +19,7 @@ with st.sidebar:
     )
 
 st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
+st.title("How Can I Assist You?🤖")
 
 # OpenAI API Configuration
 openai.api_key = "14560021aaf84772835d76246b53397a"
@@ -28,9 +28,7 @@ openai.api_type = 'azure'
 openai.api_version = '2024-02-15-preview'
 deployment_name = 'gpt'
 
-st.title("How Can I Assist You?🤖")
-
-# Initialize session state
+# Session state initialization
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "uploaded_file" not in st.session_state:
@@ -67,7 +65,7 @@ def extract_text(file):
         text += df.to_string()
     return text.strip()
 
-# Display chat messages in a conversational format
+# Display chat history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         if "file" in message and message["file"]:
@@ -82,7 +80,7 @@ with col2:
     if st.button("➕"):  # Clicking this opens the file uploader
         st.session_state.new_upload = True
 
-# Persistent file uploader
+# File uploader
 if st.session_state.new_upload:
     uploaded_file = st.file_uploader("Upload File", type=["pdf", "docx", "pptx", "csv", "xlsx"], key="file_uploader")
     
@@ -91,7 +89,7 @@ if st.session_state.new_upload:
         st.session_state.extracted_text = extract_text(uploaded_file)
         st.session_state.new_upload = False  # Reset after successful upload
 
-# Display uploaded file info and Clear File button
+# Display uploaded file info and collapsible extracted text
 if st.session_state.uploaded_file:
     col1, col2 = st.columns([5, 1])
     with col1:
@@ -100,35 +98,39 @@ if st.session_state.uploaded_file:
         if st.button("❌ Clear File"):
             st.session_state.uploaded_file = None
             st.session_state.extracted_text = ""
-    
-    # Collapsible section for extracted text
+
+    # Allow user to expand/collapse extracted text
     with st.expander("📄 View Extracted Text"):
         st.text_area("Extracted Text", st.session_state.extracted_text, height=200)
 
 if user_input and user_input.strip():
-    # Prepare conversation history as context
-    messages_context = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
-
-    # Ensure uploaded file content is always included in every prompt
-    if st.session_state.uploaded_file:
-        messages_context.insert(0, {"role": "system", "content": f"Document Context:\n{st.session_state.extracted_text}"})
-
-    # Append user's new message
-    messages_context.append({"role": "user", "content": user_input})
-
+    # Combine message history and document context
+    conversation_history = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
+    
+    if st.session_state.uploaded_file and st.session_state.extracted_text:
+        document_context = f"Here is the relevant document information:\n\n{st.session_state.extracted_text}\n\n"
+    else:
+        document_context = ""
+    
+    conversation_history.append({"role": "user", "content": document_context + user_input})
+    
     # Append user message to history
-    st.session_state.messages.append({"role": "user", "content": user_input, "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None})
-
-    # Generate response using OpenAI API with history and document context
+    st.session_state.messages.append({
+        "role": "user",
+        "content": user_input,
+        "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None
+    })
+    
+    # Generate response using OpenAI API
     response = openai.ChatCompletion.create(
         engine=deployment_name,
-        messages=messages_context,
+        messages=conversation_history,
         temperature=0.7,
         max_tokens=2000
     )
-
+    
     ai_response = response["choices"][0]["message"]["content"]
-
+    
     # Append AI response to history
     st.session_state.messages.append({"role": "assistant", "content": ai_response})
     
