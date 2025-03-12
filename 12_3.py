@@ -109,17 +109,17 @@ if user_input and user_input.strip():
     # Prepare conversation history as context
     messages_context = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
 
-    # Add document context if available
+    # Ensure uploaded file content is always included in every prompt
     if st.session_state.uploaded_file:
-        messages_context.append({"role": "system", "content": f"Document Content:\n{st.session_state.extracted_text}"})
-    
+        messages_context.insert(0, {"role": "system", "content": f"Document Context:\n{st.session_state.extracted_text}"})
+
     # Append user's new message
     messages_context.append({"role": "user", "content": user_input})
 
     # Append user message to history
     st.session_state.messages.append({"role": "user", "content": user_input, "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None})
 
-    # Generate response using OpenAI API with history context
+    # Generate response using OpenAI API with history and document context
     response = openai.ChatCompletion.create(
         engine=deployment_name,
         messages=messages_context,
