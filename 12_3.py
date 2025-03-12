@@ -106,29 +106,29 @@ if st.session_state.uploaded_file:
         st.text_area("Extracted Text", st.session_state.extracted_text, height=200)
 
 if user_input and user_input.strip():
-    # Append the user's message to the message history
-    st.session_state.messages.append({"role": "user", "content": user_input, "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None})
-    
-    # Combine chat history into a list of messages for the API
-    messages_for_api = [{"role": "system", "content": "You are a helpful assistant."}]  # Start with a system message for instructions
-    
-    # Add user and assistant messages from the history
-    for message in st.session_state.messages:
-        messages_for_api.append({
-            "role": message["role"], 
-            "content": message["content"]
-        })
+    # Prepare conversation history as context
+    messages_context = [{"role": msg["role"], "content": msg["content"]} for msg in st.session_state.messages]
 
-    # Generate response using OpenAI API
+    # Add document context if available
+    if st.session_state.uploaded_file:
+        messages_context.append({"role": "system", "content": f"Document Content:\n{st.session_state.extracted_text}"})
+    
+    # Append user's new message
+    messages_context.append({"role": "user", "content": user_input})
+
+    # Append user message to history
+    st.session_state.messages.append({"role": "user", "content": user_input, "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None})
+
+    # Generate response using OpenAI API with history context
     response = openai.ChatCompletion.create(
         engine=deployment_name,
-        messages=messages_for_api,  # Pass the entire history to the API
+        messages=messages_context,
         temperature=0.7,
         max_tokens=2000
     )
-    
+
     ai_response = response["choices"][0]["message"]["content"]
-    
+
     # Append AI response to history
     st.session_state.messages.append({"role": "assistant", "content": ai_response})
     
