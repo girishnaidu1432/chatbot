@@ -121,7 +121,7 @@ if user_input and user_input.strip():
     response = openai.ChatCompletion.create(
         engine=deployment_name,
         messages=st.session_state.messages,
-        temperature=0.7,
+        temperature=0,
         max_tokens=2000
     )
     
