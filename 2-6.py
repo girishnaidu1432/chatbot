@@ -16,7 +16,7 @@ openai.api_type = 'azure'
 openai.api_version = '2024-02-15-preview'
 deployment_name = 'gpt'
 
-# Initialize session state
+# Session state init
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "uploaded_file" not in st.session_state:
@@ -25,8 +25,10 @@ if "extracted_text" not in st.session_state:
     st.session_state.extracted_text = ""
 if "new_upload" not in st.session_state:
     st.session_state.new_upload = False
+if "sidebar_query" not in st.session_state:
+    st.session_state.sidebar_query = ""
 
-# Function to extract text from uploaded files
+# Extract text function
 def extract_text(file):
     text = ""
     if file.type == "application/pdf":
@@ -53,11 +55,10 @@ def extract_text(file):
         text += df.to_string()
     return text.strip()
 
-# Function to create a DOCX file from chat history
+# Create DOCX history
 def create_docx():
     doc = Document()
     doc.add_heading("Chatbot Conversation History", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-
     for msg in st.session_state.messages:
         p = doc.add_paragraph()
         run = p.add_run(msg["role"].capitalize() + "\n")
@@ -68,13 +69,12 @@ def create_docx():
         p.add_run(msg["content"]).font.size = Pt(12)
         p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
         doc.add_paragraph("\n")
-
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
 
-# Sidebar: Logo, Title, Upload Controls, and Download
+# SIDEBAR
 with st.sidebar:
     st.image("image.png", width=150)
     st.markdown(
@@ -85,6 +85,7 @@ with st.sidebar:
     st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
     st.title("How Can I Assist You? 🤖")
 
+    # Upload button logic
     if st.button("➕ Upload File"):
         st.session_state.new_upload = True
 
@@ -97,7 +98,7 @@ with st.sidebar:
                 "role": "system",
                 "content": f"Document Context:\n\n{st.session_state.extracted_text}"
             })
-            st.session_state.new_upload = False  # Reset after successful upload
+            st.session_state.new_upload = False
 
     if st.session_state.uploaded_file:
         col1, col2 = st.columns([5, 1])
@@ -108,6 +109,35 @@ with st.sidebar:
                 st.session_state.uploaded_file = None
                 st.session_state.extracted_text = ""
 
+    # Query bar in sidebar
+    query = st.text_input("🔍 Ask something...", key="sidebar_query")
+    if query:
+        combined_prompt = query
+        if st.session_state.uploaded_file:
+            combined_prompt = f"Here is a document that provides context:\n\n{st.session_state.extracted_text}\n\nNow, based on this document, answer the following:\n{query}"
+
+        st.session_state.messages.append({
+            "role": "user",
+            "content": query,
+            "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None
+        })
+
+        response = openai.ChatCompletion.create(
+            engine=deployment_name,
+            messages=st.session_state.messages,
+            temperature=0,
+            max_tokens=2000
+        )
+        ai_response = response["choices"][0]["message"]["content"]
+
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": ai_response
+        })
+
+        st.experimental_rerun()
+
+    # Download chat history
     if st.button("Download Chat History"):
         docx_file = create_docx()
         st.download_button(
@@ -117,14 +147,14 @@ with st.sidebar:
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         )
 
-# MAIN PAGE: Display only prompt and response
+# MAIN PAGE – chat messages
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         if "file" in message and message["file"]:
             st.markdown(f"📄 **{message['file']}**")
         st.markdown(message["content"])
 
-# Chat input at bottom of main page
+# Optional: chat input at bottom
 user_input = st.chat_input("Enter your query:")
 if user_input and user_input.strip():
     combined_prompt = user_input
@@ -143,7 +173,6 @@ if user_input and user_input.strip():
         temperature=0,
         max_tokens=2000
     )
-
     ai_response = response["choices"][0]["message"]["content"]
 
     st.session_state.messages.append({
