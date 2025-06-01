@@ -154,30 +154,4 @@ for message in st.session_state.messages:
             st.markdown(f"📄 **{message['file']}**")
         st.markdown(message["content"])
 
-# Optional: chat input at bottom
-user_input = st.chat_input("Enter your query:")
-if user_input and user_input.strip():
-    combined_prompt = user_input
-    if st.session_state.uploaded_file:
-        combined_prompt = f"Here is a document that provides context:\n\n{st.session_state.extracted_text}\n\nNow, based on this document, answer the following:\n{user_input}"
 
-    st.session_state.messages.append({
-        "role": "user",
-        "content": user_input,
-        "file": st.session_state.uploaded_file if st.session_state.uploaded_file else None
-    })
-
-    response = openai.ChatCompletion.create(
-        engine=deployment_name,
-        messages=st.session_state.messages,
-        temperature=0,
-        max_tokens=2000
-    )
-    ai_response = response["choices"][0]["message"]["content"]
-
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": ai_response
-    })
-
-    st.rerun()
