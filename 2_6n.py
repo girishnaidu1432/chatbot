@@ -103,7 +103,7 @@ if user_input and user_input.strip():
         if not any(m["role"] == "system" for m in chat_messages):
             chat_messages.insert(0, {
                 "role": "system",
-                "content": f"Use the following document as context for the conversation, but do not mention or display the document:\n\n{st.session_state.extracted_text}"
+                "content": f"Here is a document that provides context:\n\n{st.session_state.extracted_text}\n\nNow, based on this document, answer the following:\n{user_input}"
             })
 
     # Append user's question
