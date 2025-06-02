@@ -10,29 +10,40 @@ from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 # --- PCB/BCB Prompt Template ---
-PCB_BCB_TEMPLATE = """
-If the question is about PCB or BCB requirements or structures, Please use the following section headers and content.
+PCB_BCB_TEMPLATE ="""
+ 
+If the question is about PCB or BCB requirements, Please use the following section headers and content.
 
-Introduction
-- Provide the bonus overview in this section
+	Introduction
 
-Commission configurations
-- Use the records with the type as "commissions configurations".
-- Show the parameter configuration and description as bullet points
+	- provide the bonus overview in this section
 
-Rate card configurations
-- Use the records with the type as "Rate card configurations".
-- Show the parameter configuration and description as bullet points
+	Commission configurations
 
-Process
-- Use the records with the type as "Process".
-- Use the Key parameter definition text to describe the process
+	- use the records with the type as "commissions configurations".
 
+	- Show the parameter configuration and description as bullet points
+
+	Rate card configurations
+
+	- use the records with the type as "Rate card configurations".
+
+	- Show the parameter configuration and description as bullet points
+
+	Process
+
+	- use the records with the type as "Process".
+
+	- use the Key parameter definition text to describe the process
+ 
 If the question is about Comparison of bonus among countries, show the output in Tabular format.
-
+ 
 If the question is about generating the BCB or PCB requirements for a country based on the parameters of existing countries, do the following:
+
 - Convert the currency to the country for which the bonus requirements are being created
-- Use the BCB/PCB structure with the sections defined while generating the output.
+
+- Use the BCB/PCB structures of existing countries and generate the requirement as per the existing countries bonus requirements.
+ 
 """
 
 # --- Sidebar content ---
