@@ -9,11 +9,14 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
-st.set_page_config(
-    page_title=".",  # Leave this empty to not show any text in the tab
-    page_icon="🤖",  # Or replace with a custom icon URL like 'https://example.com/icon.png'
-    layout="wide"
-)
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # --- PCB/BCB Prompt Template ---
 PCB_BCB_TEMPLATE ="""
