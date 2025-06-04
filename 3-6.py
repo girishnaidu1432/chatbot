@@ -9,6 +9,13 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
+
+st.set_page_config(
+    page_title="Innominds GEN-AI",  # must be non-empty!
+    page_icon="🤖",
+    layout="wide"
+)
+
 hide_streamlit_style = """
     <style>
     #MainMenu {visibility: hidden;}
