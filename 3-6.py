@@ -10,7 +10,7 @@ from docx.shared import Pt
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 st.set_page_config(
-    page_title="",  # Leave this empty to not show any text in the tab
+    page_title="APP",  # Leave this empty to not show any text in the tab
     page_icon="🤖",  # Or replace with a custom icon URL like 'https://example.com/icon.png'
     layout="wide"
 )
