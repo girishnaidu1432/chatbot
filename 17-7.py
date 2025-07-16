@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- PCB/BCB Prompt Template ---
+# PCB/BCB Template
 PCB_BCB_TEMPLATE = """
 If the question is about providing / generating the requirements of a bonus, Please use the following section headers and content.
 	Introduction
@@ -29,21 +29,23 @@ If the question is about providing / generating the requirements of a bonus, Ple
 	Process
 	- use the records with the type as "Process".
 	- use the Key parameter definition text to describe the process
- 
+
 If the question is about Comparison of bonuses, show the output in Tabular format.
- 
+
 If the question is about generating requirements of a specific bonus or all the bonuses for a country, based on the parameters of existing countries, do the following:
 - Convert the currency to the country for which the bonus requirements are being created
 - Generate the bonus requirement as per the existing countries bonus structures.
 """
 
-# Initialize state variables
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# --- Initialize State ---
 if "chat_sessions" not in st.session_state:
-    st.session_state.chat_sessions = []
+    st.session_state.chat_sessions = []  # List of list of messages
+if "session_titles" not in st.session_state:
+    st.session_state.session_titles = []
 if "current_session_index" not in st.session_state:
     st.session_state.current_session_index = None
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 if "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = None
 if "extracted_text" not in st.session_state:
@@ -51,7 +53,7 @@ if "extracted_text" not in st.session_state:
 if "new_upload" not in st.session_state:
     st.session_state.new_upload = False
 
-# --- File Text Extraction Helper ---
+# --- File Text Extraction ---
 def extract_text(file):
     text = ""
     if file.type == "application/pdf":
@@ -78,12 +80,34 @@ def extract_text(file):
         text += df.to_string()
     return text.strip()
 
-# --- Sidebar UI ---
+# --- Sidebar ---
 with st.sidebar:
-    st.title("How Can I Assist You? 🤖")
+    st.title("Innominds GEN-AI 🤖")
 
-    user_input = st.chat_input("Enter your query:")
+    # ➕ New Chat
+    if st.button("🆕 New Chat"):
+        if st.session_state.messages:
+            # Save old session
+            title = next((msg["content"] for msg in st.session_state.messages if msg["role"] == "user"), "Untitled")
+            st.session_state.chat_sessions.append(st.session_state.messages)
+            st.session_state.session_titles.append(title[:40] + "..." if len(title) > 40 else title)
 
+        # Start new session
+        st.session_state.messages = []
+        st.session_state.current_session_index = None
+        st.rerun()
+
+    st.markdown("---")
+    st.subheader("🕓 Chat History")
+
+    # Session history buttons
+    for i, title in enumerate(st.session_state.session_titles):
+        if st.button(title, key=f"session_{i}"):
+            st.session_state.messages = st.session_state.chat_sessions[i]
+            st.session_state.current_session_index = i
+            st.rerun()
+
+    # File Upload
     if st.button("➕ Upload File"):
         st.session_state.new_upload = True
 
@@ -100,21 +124,10 @@ with st.sidebar:
             st.session_state.uploaded_file = None
             st.session_state.extracted_text = ""
 
-    st.markdown("---")
-    st.subheader("🕓 Past Sessions")
-
-    for i, session in enumerate(st.session_state.chat_sessions):
-        first_user_msg = next((msg["content"] for msg in session if msg["role"] == "user"), "Untitled")
-        preview = first_user_msg[:40] + "..." if len(first_user_msg) > 40 else first_user_msg
-        if st.button(preview, key=f"session_{i}"):
-            st.session_state.messages = session
-            st.session_state.current_session_index = i
-            st.rerun()
-
-# --- Main App Logo ---
+# --- Main Logo ---
 st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
 
-# --- Display Chat Messages ---
+# --- Display Messages ---
 for message in st.session_state.messages:
     if message["role"] != "system":
         with st.chat_message(message["role"]):
@@ -122,53 +135,46 @@ for message in st.session_state.messages:
                 st.markdown(f"📄 **{message['file']}**")
             st.markdown(message["content"])
 
-# --- OpenAI API Configuration ---
+# --- OpenAI API ---
 openai.api_key = "14560021aaf84772835d76246b53397a"
 openai.api_base = "https://amrxgenai.openai.azure.com/"
 openai.api_type = 'azure'
 openai.api_version = '2024-02-15-preview'
 deployment_name = 'gpt'
 
-# --- Chat Handling ---
+# --- Chat Input ---
+user_input = st.chat_input("Enter your query:")
+
 if user_input and user_input.strip():
-    chat_messages = st.session_state.messages.copy()
+    messages = st.session_state.messages.copy()
     pcb_bcb_in_query = "pcb" in user_input.lower() or "bcb" in user_input.lower()
 
     if st.session_state.extracted_text:
-        if not any(m["role"] == "system" for m in chat_messages):
+        if not any(m["role"] == "system" for m in messages):
             system_prompt = f"Here is a document that provides context:\n\n{st.session_state.extracted_text}\n\n"
             if pcb_bcb_in_query:
                 system_prompt += PCB_BCB_TEMPLATE + "\n\n"
             system_prompt += f"Now, based on this document, answer the following:\n{user_input}"
-            chat_messages.insert(0, {"role": "system", "content": system_prompt})
+            messages.insert(0, {"role": "system", "content": system_prompt})
 
-    chat_messages.append({"role": "user", "content": user_input})
+    messages.append({"role": "user", "content": user_input})
 
     response = openai.ChatCompletion.create(
         engine=deployment_name,
-        messages=chat_messages,
+        messages=messages,
         temperature=0,
         max_tokens=2000
     )
 
     ai_response = response["choices"][0]["message"]["content"]
 
-    # Add to current session
-    current_session = st.session_state.messages.copy()
-    current_session.append({"role": "user", "content": user_input, "file": st.session_state.uploaded_file})
-    current_session.append({"role": "assistant", "content": ai_response})
-    st.session_state.messages = current_session
-
-    # Save or update session history
-    if st.session_state.current_session_index is None:
-        st.session_state.chat_sessions.append(current_session)
-        st.session_state.current_session_index = len(st.session_state.chat_sessions) - 1
-    else:
-        st.session_state.chat_sessions[st.session_state.current_session_index] = current_session
+    # Append to current messages
+    messages.append({"role": "assistant", "content": ai_response})
+    st.session_state.messages = messages
 
     st.rerun()
 
-# --- Download Chat History as DOCX ---
+# --- Download Chat History ---
 def create_docx():
     doc = Document()
     doc.add_heading("Chatbot Conversation History", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -180,7 +186,7 @@ def create_docx():
         run = p.add_run(msg["role"].capitalize() + "\n")
         run.bold = True
         run.font.size = Pt(14)
-        if "file" in msg and msg["file"]:
+        if "file" in msg and msg.get("file"):
             doc.add_paragraph(f"📄 {msg['file']}")
         p.add_run(msg["content"]).font.size = Pt(12)
         p.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT
