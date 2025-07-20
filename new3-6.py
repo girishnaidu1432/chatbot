@@ -142,7 +142,7 @@ if user_input and user_input.strip():
         engine=deployment_name,
         messages=chat_messages,
         temperature=0,
-        max_tokens=5000
+        max_tokens=4095
     )
 
     ai_response = response["choices"][0]["message"]["content"]
