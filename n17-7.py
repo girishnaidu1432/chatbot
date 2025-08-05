@@ -148,7 +148,7 @@ with st.sidebar:
             if st.button(prompt, key=f"preset_{idx}"):
                 # Save selected prompt into session_state so main app can handle it
                 st.session_state._selected_preset = prompt
-                st.experimental_rerun()  # rerun so main can pick up session_state change
+                st.rerun()  # rerun so main can pick up session_state change
 
 # Main logo
 st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
