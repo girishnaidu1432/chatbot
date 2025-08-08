@@ -16,11 +16,22 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Place logo at the very top with no gap
+# Remove padding & place logo at top
 # ---------------------------
 st.markdown(
     """
-    <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: -40px; margin-bottom: 10px;">
+    <style>
+        .block-container {
+            padding-top: 0rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    """
+    <div style="display: flex; justify-content: flex-start; align-items: center; padding-top: 0px; padding-bottom: 10px;">
         <img src="https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png" width="200">
     </div>
     """,
@@ -28,7 +39,7 @@ st.markdown(
 )
 
 # ---------------------------
-# Preset prompts (added)
+# Preset prompts
 # ---------------------------
 PRESET_PROMPTS = [
     "What are the bonuses having the conditions for PANF, TANF or UNF region wise?",
@@ -41,7 +52,6 @@ PRESET_PROMPTS = [
     "Create the user story for Poland Thermomix BCB the commission calculation in case of negative sales order event"
 ]
 
-# PCB/BCB Prompt Template
 PCB_BCB_TEMPLATE = """
 If the question is about providing / generating the requirements of a bonus, Please use the following section headers and content.
     Introduction
@@ -63,7 +73,7 @@ If the question is about generating requirements of a specific bonus or all the 
 - Generate the bonus requirement as per the existing countries bonus structures.
 """
 
-# Initialize session state
+# Session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "uploaded_file" not in st.session_state:
@@ -79,7 +89,7 @@ if "session_titles" not in st.session_state:
 if "current_session_index" not in st.session_state:
     st.session_state.current_session_index = None
 
-# File text extraction
+# File extraction
 def extract_text(file):
     text = ""
     if file.type == "application/pdf":
@@ -106,9 +116,7 @@ def extract_text(file):
         text += df.to_string()
     return text.strip()
 
-# ---------------------------
 # Sidebar
-# ---------------------------
 with st.sidebar:
     st.title("How Can I Assist You? 🤖")
 
@@ -148,7 +156,7 @@ with st.sidebar:
             st.session_state.current_session_index = latest_index
             st.rerun()
 
-    # Renamed section title here
+    # Renamed to "Prompts"
     st.markdown("---")
     st.subheader("Prompts")
     with st.expander("Choose a prompt and click to run it"):
@@ -172,7 +180,7 @@ openai.api_type = 'azure'
 openai.api_version = '2024-02-15-preview'
 deployment_name = 'gpt'
 
-# Helper function
+# Process user input
 def process_user_input(user_input_text):
     if not user_input_text or not user_input_text.strip():
         return
