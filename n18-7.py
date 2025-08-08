@@ -16,10 +16,7 @@ st.set_page_config(
 )
 
 # ---------------------------
-# Place logo at the very top
-# ---------------------------
-# ---------------------------
-# Place logo at absolute top with no padding
+# Place logo at the very top with no gap
 # ---------------------------
 st.markdown(
     """
@@ -29,6 +26,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 # ---------------------------
 # Preset prompts (added)
 # ---------------------------
@@ -114,7 +112,6 @@ def extract_text(file):
 with st.sidebar:
     st.title("How Can I Assist You? 🤖")
 
-    # New Chat Button
     if st.button("🆕 New Chat"):
         if st.session_state.messages:
             first_user_msg = next((msg["content"] for msg in st.session_state.messages if msg["role"] == "user"), "Untitled")
@@ -141,9 +138,6 @@ with st.sidebar:
             st.session_state.uploaded_file = None
             st.session_state.extracted_text = ""
 
-    # ---------------------------
-    # Show ONLY the latest past chat
-    # ---------------------------
     if st.session_state.chat_sessions:
         st.markdown("---")
         st.subheader("🕓 Latest Chat")
@@ -154,12 +148,10 @@ with st.sidebar:
             st.session_state.current_session_index = latest_index
             st.rerun()
 
-    # ---------------------------
-    # Preset prompts UI (added)
-    # ---------------------------
+    # Renamed section title here
     st.markdown("---")
     st.subheader("Prompts")
-    with st.expander("Choose a preset prompt and click to run it"):
+    with st.expander("Choose a prompt and click to run it"):
         for idx, prompt in enumerate(PRESET_PROMPTS):
             if st.button(prompt, key=f"preset_{idx}"):
                 st.session_state._selected_preset = prompt
