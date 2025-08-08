@@ -18,8 +18,17 @@ st.set_page_config(
 # ---------------------------
 # Place logo at the very top
 # ---------------------------
-st.image("https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png", width=200)
-
+# ---------------------------
+# Place logo at absolute top with no padding
+# ---------------------------
+st.markdown(
+    """
+    <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: -40px; margin-bottom: 10px;">
+        <img src="https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png" width="200">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 # ---------------------------
 # Preset prompts (added)
 # ---------------------------
@@ -149,7 +158,7 @@ with st.sidebar:
     # Preset prompts UI (added)
     # ---------------------------
     st.markdown("---")
-    st.subheader("Preset PCB/BCB Prompts")
+    st.subheader("Prompts")
     with st.expander("Choose a preset prompt and click to run it"):
         for idx, prompt in enumerate(PRESET_PROMPTS):
             if st.button(prompt, key=f"preset_{idx}"):
