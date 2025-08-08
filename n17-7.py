@@ -141,7 +141,7 @@ with st.sidebar:
     # Preset prompts UI (added)
     # ---------------------------
     st.markdown("---")
-    st.subheader("Preset PCB/BCB Prompts")
+    st.subheader("Prompts")
     with st.expander("Choose a preset prompt and click to run it"):
         for idx, prompt in enumerate(PRESET_PROMPTS):
             # Use a unique key for each button
