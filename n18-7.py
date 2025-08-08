@@ -18,6 +18,7 @@ st.set_page_config(
 # ---------------------------
 # Remove padding & place logo at top
 # ---------------------------
+# Remove default padding so content starts at the very top
 st.markdown(
     """
     <style>
@@ -29,9 +30,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# Full visible logo at the top
 st.markdown(
     """
-    <div style="display: flex; justify-content: flex-start; align-items: center; padding-top: 0px; padding-bottom: 10px;">
+    <div style="display: flex; justify-content: flex-start; align-items: center; padding-top: 5px; padding-bottom: 10px;">
         <img src="https://www.innominds.com/hubfs/Innominds-201612/img/nav/Innominds-Logo.png" width="200">
     </div>
     """,
