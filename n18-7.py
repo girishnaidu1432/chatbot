@@ -176,11 +176,11 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
 
 # OpenAI config
-openai.api_key = "14560021aaf84772835d76246b53397a"
-openai.api_base = 'https://amrxgenai.openai.azure.com/'
+openai.api_key = "8DZrl2cDQDV9T2t6j0dca8k5gjO0wqAP3PeyXzjBB5JK4VB8CS81JQQJ99BGACHYHv6XJ3w3AAAAACOG7jeg"
+openai.api_base = 'https://miyer-7371-resource.cognitiveservices.azure.com/'
 openai.api_type = 'azure'
-openai.api_version = '2024-02-15-preview'
-deployment_name = 'gpt'
+openai.api_version = '2024-12-01-preview'
+deployment_name = 'gpt-4.1'
 
 # Process user input
 def process_user_input(user_input_text):
